@@ -12,6 +12,7 @@ import json
 import re
 import datetime
 import random
+import paramiko
 
 
 def index(request):
@@ -48,15 +49,92 @@ def preparevps(request):
 
 def install_socks(request):
 	if request.method == 'POST':
-		login_socks = request.POST.get('login_socks', '')
-		pass_socks = request.POST.get('pass_socks', '')
-		data_socks = request.POST.get('data_socks', '').split(',')[0]
-		if len(data_socks)<1:
+		PROXY_USER = request.POST.get('login_socks', '')
+		PROXY_PASS = request.POST.get('pass_socks', '')
+		vps_lst = request.POST.get('data_socks', '').split(',')
+		if len(vps_lst[0])<1:
 			return HttpResponse('')
+
+
+
+		random_file_pre = str(random.randint(19,9414))
+
+
+		def create_script_install_proxy(ip,pr_user,pr_pass,random_file_pre):
+			create_file = open('media/install_socks'+random_file_pre+'.py','w')
+			python_file = '''#! /usr/bin/env python
+import os
+
+a = os.system("""
+	service iptables stop
+	service iptables save
+	chkconfig iptables off
+	cd /usr/local/src
+	yum update -y
+	yum install -y mc nano gcc make wget
+	wget http://3proxy.ru/0.6.1/3proxy-0.6.1.tgz
+	tar -xvzf 3proxy-0.6.1.tgz
+	cd 3proxy-0.6.1
+	make -f Makefile.Linux
+	mkdir /usr/local/etc/3proxy
+	mkdir /usr/local/etc/3proxy/bin
+	mkdir /usr/local/etc/3proxy/logs
+	mkdir /usr/local/etc/3proxy/stat
+	cp src/3proxy /usr/local/etc/3proxy/bin
+	cp ./scripts/rc.d/proxy.sh /etc/init.d/3proxy
+	chkconfig 3proxy on
+	""")
+
+
+def create_conf_proxy(ip_serv,login_proxy,pass_proxy):
+	os.chdir("/usr/local/etc/3proxy")
+	# os.chdir("/home/tp")
+	proxy_conf = """daemon
+auth strong
+users """+login_proxy+":CL:"+pass_proxy+"""
+socks -n -a -p3128 -i"""+ip_serv+" -e"+ip_serv+"""
+flush
+allow """+login_proxy+"""
+	"""
+	conf_proxy_create = open("3proxy.cfg","w")
+	conf_proxy_create.writelines(proxy_conf)
+	conf_proxy_create.close()
+	return "ok"
+
+create_conf_proxy("'''+str(ip)+'","'+str(pr_user)+'","'+str(pr_pass)+'''")
+
+b = os.system("""
+	reboot
+	""")
+'''
+			create_file.writelines(python_file)
+			create_file.close()
+
+		try:
+			create_script_install_proxy(vps_lst[0],PROXY_USER,PROXY_PASS,random_file_pre)
+			host_remote = re.sub("^\s+|\n|\r|\s+$", '', vps_lst[0])
+			username_serv = re.sub("^\s+|\n|\r|\s+$", '', vps_lst[1])
+			pass_serv = re.sub("^\s+|\n|\r|\s+$", '', vps_lst[2])				
+
+
+			client = paramiko.SSHClient()
+			client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+			client.connect(host_remote, username=username_serv, password=pass_serv,port=22)
+			stdin, stdout, stderr = client.exec_command('yum install -y python')
+			client.close()			
+			os.remove('media/install_socks'+random_file_pre+'.py')
+
+			return HttpResponse(vps_lst[0])
+
+		except:
+			return HttpResponse('Error2')
+
+		return HttpResponse('Error')
+				
 
 	
 
-	return HttpResponse(data_socks)
+
 
 def create_file_ams(request):	
 	if request.method == 'POST':		
@@ -84,3 +162,21 @@ def download(request,namefile):
 		response.write(file_read)		
 
 		return response
+
+
+# transport = paramiko.Transport((host_remote, 22))
+# transport.connect(username=username_serv, password=pass_serv)
+# sftp = paramiko.SFTPClient.from_transport(transport) 
+
+# remotepath = '/root/install_socks'+random_file_pre+'.py'
+# localpath = 'media/install_socks'+random_file_pre+'.py'
+# sftp.put(localpath, remotepath)
+# sftp.close()
+# transport.close()
+
+# client = paramiko.SSHClient()
+# client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+# client.connect(host_remote, username=username_serv, password=pass_serv,port=22)
+# stdin, stdout, stderr = client.exec_command('python install_socks'+random_file_pre+'.py')
+# client.close()
+# os.system('python install_socks.py')
