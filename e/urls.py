@@ -14,6 +14,8 @@ urlpatterns = [
 	url(r'^preparevps/$', preparevps),
 	url(r'^install_socks/$', install_socks),
 	url(r'^create_file_ams/$', create_file_ams),
+	url(r'^download/(?P<namefile>.+)$', download),
+	
 	url(r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': os.path.join(st.BASE_DIR, 'media')}),
 	url(r'^admin/', include(admin.site.urls)),    
     url(r'^$', index),

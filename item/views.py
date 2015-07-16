@@ -10,6 +10,8 @@ from django.db import connection
 from django.core.mail import send_mail
 import json
 import re
+import datetime
+import random
 
 
 def index(request):
@@ -56,16 +58,29 @@ def install_socks(request):
 
 	return HttpResponse(data_socks)
 
-def create_file_ams(request):
-	if request.method == 'POST':
+def create_file_ams(request):	
+	if request.method == 'POST':		
 		login_socks = request.POST.get('login_socks', '')
 		pass_socks = request.POST.get('pass_socks', '')
-		list_socks_ready = request.POST.get('list_socks_ready', '')
-		re.sub("^\s+|\n|\r|\s+$", '', list_socks_ready)
-
+		list_socks_ready = request.POST.get('list_socks_ready', '')		
 		for_save = list_socks_ready.split('\n')
-		name_file = 'data_vps.txt'
-		file_ready = open(name_file,'w').writelines(for_save)
+		now_time = datetime.datetime.now()
+		name_file = 'AMS_socks'+str(datetime.date.today())+str(random.randint(13,9133))+'.txt'
 
+		for l in for_save:
+			new_l = l.split(',')
+			if len(new_l)>1:
+				str_socks = new_l[0]+',3128,SOCKS5,'+login_socks+','+pass_socks+'\n'
+				file_ready = open('media/'+name_file,'a').write(str_socks)	
 	
-	return HttpResponse(list_socks_ready)
+		return HttpResponse(name_file)
+
+def download(request,namefile):
+		# Create the HttpResponse object with the appropriate CSV header.
+		response = HttpResponse(content_type='text/csv')
+		response['Content-Type'] = 'application/x-download';
+		response['Content-Disposition'] = 'attachment; filename="'+namefile+'"'
+		file_read = open('media/'+namefile, 'r').read()
+		response.write(file_read)		
+
+		return response

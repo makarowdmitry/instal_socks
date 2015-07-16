@@ -232,10 +232,11 @@
                 alert('Ошибка');
                  unblock_button();
               },
-              success: function(data){
-                alert(data);
+              success: function(data){           
 
-              $('#dowload-ams').attr('href', data)
+
+
+                $('#dowload-ams').attr('href', '/download/'+data)
                $('#dowload-ams').attr('disabled', false);
 
                 unblock_button();              
