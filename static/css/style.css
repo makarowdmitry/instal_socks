@@ -1,0 +1,36 @@
+.wrapper {
+	width: 900px;
+	margin-top: 20px;
+}
+
+.text-step span {
+	font-size: 24px;
+	font-weight: bold;
+}
+.btn-sm {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.none-span span {
+	font-size: 15px;
+	font-weight: normal;
+}
+.dowloand-socks p,.dowloand-socks p span {
+	font-size: 11px;
+	padding: 0px;
+	margin: 0px;
+}
+
+input, textarea{
+	font-size: 11px !important;
+}
+.block-data-my {
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+.nav-pills {
+	margin-bottom: 20px !important;
+
+}
