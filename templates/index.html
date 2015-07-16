@@ -52,7 +52,7 @@
         </div>
         <div class="col-md-3 text-step">
 
-        <p><span>1</span> - add list vps/vds</p>
+        <p><span>1.</span> Add list vps/vds</p>
         <fieldset id="disabled">
 <textarea class="form-control raw_list_vps" rows="12" placeholder="IP: 109.234.01.01 Пользователь: root Password: P2xvKahILwMf
 "></textarea>
@@ -65,7 +65,7 @@
         </fieldset>        
         </div>
         <div class="col-md-4 text-step">
-        <p><span>2</span> - list ready</p>
+        <p><span>2.</span> List ready</p>
         <fieldset>
         <textarea class="form-control" rows="12" id="list-socks-ready" placeholder="109.234.01.01,root,ahILwMf"></textarea>
           <div class="row">
@@ -81,35 +81,21 @@
         </div>
 
         <div class="col-md-5 text-step">
-        <p><span>3</span> - socks ready</p>
+
+        <div class="row">
+          <div class="col-md-6"><p><span>3.</span> Socks ready <span class="count-socks">0</span></p></div>
+          <div class="col-md-6"><a class="btn btn-primary btn-xs" style="margin-top:10px;" id="dowload-ams" href="" disabled>Download for AMS</a> </div>
+        </div>      
+     
 
         <div class="row dowloand-socks">
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
-        <div class="col-md-3"><p>123.092.122.312</p></div>
+        <div class="dowloand-socks-b"></div>
 
 
           
         </div>
 
-        <button class="btn btn-primary btn-sm" type="submit">3. Download for AMS</button>    
+           
 
         
           
@@ -140,12 +126,6 @@
        $('fieldset').attr('disabled', false); 
     }
 
-
-  
-
-   
-
-
       $(document).on('click','.btn-prepare-socks',function(){
         block_button();
       // Нажимаем кнопку Prepare 
@@ -171,30 +151,31 @@
               },
               success: function(data){
                 var string_vps = ''
+                var array_vps_ip = []
                 var i = 0; 
-                while(i < data.length){ 
-               string_vps += data[i]['ip']+',root,'+data[i]['pass']+'\n'
-                i++
-                    }
-
-              $('#list-socks-ready').val(string_vps);
-              $('.none-span span').text(data.length);
-              unblock_button();
+                while(i < data.length){
                 
+               string_vps += data[i]['ip']+',root,'+data[i]['pass']+'\n'
+               array_vps_ip.push(data[i]['ip'])
+                i++
+                    }              
+
+                var last_vps = $('#list-socks-ready').val();
+                $('#list-socks-ready').val(last_vps+string_vps);
+                var last_count = parseInt($('.none-span span').text());
+                $('.none-span span').text(last_count+data.length);
+
               
+              unblock_button();
 
               }
-              });
-
-            
-
-
-                
+              });   
              });
 
 
 
          $(document).on('click','#go-install-socks',function(){
+          block_button();
 
           // block_button();
 
@@ -206,25 +187,67 @@
 
           var list_socks_ready = $('#list-socks-ready').val();
           var login_socks = $('#login-socks').val();
-          var pass_socks = $('#pass-socks').val();
+          var pass_socks = $('#pass-socks').val();            
+          var data_socks = list_socks_ready.split('\n');
+            
 
-          alert(list_socks_ready);
-          alert(login_socks);
-          alert(pass_socks);
-      
-                  // $.ajax({
-                  //     url: "/prepare_socks/", //Адрес подгружаемой страницы
-                  //     type: "POST", //Тип запроса
-                  //     dataType: "html", //Тип данных
-                  //     data: $("#form_call_order").serialize(),
-                  //     error: function(){
-                  //       alert("Ошибка отправки"); 
-                  //     },
-                  //     success: function(data){                    
-                  //      alert('Спасибо, мы с вами свяжемся!');
-                  //     },
-               
-                  // });
+            for (var i = 0; i < data_socks.length; i++) {
+
+              $.ajax({
+              type: 'POST',
+              url: '/install_socks/',
+              data: {
+                'login_socks': login_socks,
+                'pass_socks': pass_socks,
+                'data_socks': data_socks[i],
+              },
+              error: function(){
+                alert('Ошибка');
+                 unblock_button();
+              },
+              success: function(data){
+
+                if(data!=''){
+                  $('.dowloand-socks-b').after('<div class="col-md-3"><p>'+data+'</p></div>');
+                }
+                var last_count_socks = parseInt($('.count-socks').text());
+                $('.count-socks').text(last_count_socks+1);
+                
+                
+              }
+              });  
+
+            }
+
+
+              $.ajax({
+              type: 'POST',
+              url: '/create_file_ams/',
+              data: {
+                'login_socks': login_socks,
+                'pass_socks': pass_socks,
+                'list_socks_ready': list_socks_ready,
+              },
+              error: function(){
+                alert('Ошибка');
+                 unblock_button();
+              },
+              success: function(data){
+                alert(data);
+
+              $('#dowload-ams').attr('href', data)
+               $('#dowload-ams').attr('disabled', false);
+
+                unblock_button();              
+                
+              }
+              });  
+
+
+
+            
+
+          
                   
                });
 

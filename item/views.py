@@ -44,8 +44,28 @@ def preparevps(request):
 
 		return HttpResponse(json.dumps(list_vps), content_type='application/json')
 
-def install_socks(request):	
-	return HttpResponse()
+def install_socks(request):
+	if request.method == 'POST':
+		login_socks = request.POST.get('login_socks', '')
+		pass_socks = request.POST.get('pass_socks', '')
+		data_socks = request.POST.get('data_socks', '').split(',')[0]
+		if len(data_socks)<1:
+			return HttpResponse('')
 
-def create_file_ams(request):	
-	return HttpResponse()
+	
+
+	return HttpResponse(data_socks)
+
+def create_file_ams(request):
+	if request.method == 'POST':
+		login_socks = request.POST.get('login_socks', '')
+		pass_socks = request.POST.get('pass_socks', '')
+		list_socks_ready = request.POST.get('list_socks_ready', '')
+		re.sub("^\s+|\n|\r|\s+$", '', list_socks_ready)
+
+		for_save = list_socks_ready.split('\n')
+		name_file = 'data_vps.txt'
+		file_ready = open(name_file,'w').writelines(for_save)
+
+	
+	return HttpResponse(list_socks_ready)

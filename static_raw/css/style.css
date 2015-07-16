@@ -34,3 +34,9 @@ input, textarea{
 	margin-bottom: 20px !important;
 
 }
+
+.count-socks {
+	font-size: 15px !important;
+	color:blue;
+	font-weight: bold;
+}
