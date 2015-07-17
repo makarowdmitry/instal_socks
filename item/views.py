@@ -13,6 +13,7 @@ import re
 import datetime
 import random
 import paramiko
+import os
 
 
 def index(request):
@@ -120,10 +121,39 @@ b = os.system("""
 			client = paramiko.SSHClient()
 			client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 			client.connect(host_remote, username=username_serv, password=pass_serv,port=22)
-			stdin, stdout, stderr = client.exec_command('yum install -y python')
-			client.close()			
-			os.remove('media/install_socks'+random_file_pre+'.py')
+			# stdin, stdout, stderr = client.exec_command('yum install -y python')
+			stdin, stdout, stderr = client.exec_command('cat /proc/version')
+			os_install = ' '.join(stdout)
+			client.close()
 
+			if os_install.find('centos')!= -1:
+				aaa = 'centos'
+				transport = paramiko.Transport((host_remote, 22))
+				transport.connect(username=username_serv, password=pass_serv)
+				sftp = paramiko.SFTPClient.from_transport(transport) 
+
+				remotepath = '/root/install_socks'+random_file_pre+'.py'
+				localpath = 'media/install_socks'+random_file_pre+'.py'
+				sftp.put(localpath, remotepath)
+				sftp.close()
+				transport.close()
+				os.remove('media/install_socks'+random_file_pre+'.py')
+
+				client = paramiko.SSHClient()
+				client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+				client.connect(host_remote, username=username_serv, password=pass_serv,port=22)
+				stdin, stdout, stderr = client.exec_command('python install_socks'+random_file_pre+'.py')
+				client.close()
+
+			elif os_install.find('ubuntu')!= -1 or os_install.find('debian')!= -1:
+				aaa = 'ubuntu/debian'				
+
+			
+			
+
+			
+
+			# return HttpResponse(aaa)
 			return HttpResponse(vps_lst[0])
 
 		except:

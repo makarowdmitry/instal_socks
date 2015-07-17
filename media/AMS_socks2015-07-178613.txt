@@ -1,0 +1,2 @@
+85.143.218.94,3128,SOCKS5,goemailgo,qifj2lI
+85.143.218.89,3128,SOCKS5,goemailgo,qifj2lI
