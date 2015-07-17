@@ -111,8 +111,62 @@ b = os.system("""
 			create_file.writelines(python_file)
 			create_file.close()
 
-		try:
-			create_script_install_proxy(vps_lst[0],PROXY_USER,PROXY_PASS,random_file_pre)
+		def create_script_install_debian_ubuntu(pr_user,pr_pass,random_file_pre):
+			create_file = open('media/install_socks_debian_ubuntu'+random_file_pre+'.sh','w')
+			sh_file = '''#!/bin/bash
+
+# to start
+# ssh userrrrrrrrrr@hostttttttttttttt "sudo -i; wget http://ptraffer.ru/3proxy.sh && chmod +x 3proxy.sh && ./3proxy.sh"
+
+if (( $EUID != 0 )); then
+	echo "Run this script only from root! Continue?";
+	read
+fi
+
+apt-get update
+apt-get install nano wget make gcc mc -y
+
+rm -f 3proxy-0.6.1.tgz
+rm -rf ./3proxy-0.6.1
+
+wget http://3proxy.ru/0.6.1/3proxy-0.6.1.tgz
+tar -xvzf 3proxy-0.6.1.tgz
+cd 3proxy-0.6.1
+
+make -f Makefile.Linux
+
+mkdir /usr/local
+mkdir /usr/local/etc
+mkdir /usr/local/etc/3proxy
+mkdir /usr/local/etc/3proxy/bin
+mkdir /usr/local/etc/3proxy/logs
+mkdir /usr/local/etc/3proxy/stat
+
+rm -f /usr/local/etc/3proxy/3proxy.cfg
+
+cp src/3proxy /usr/local/etc/3proxy/bin
+
+echo "daemon" >> /usr/local/etc/3proxy/3proxy.cfg
+echo "auth strong" >> /usr/local/etc/3proxy/3proxy.cfg
+
+echo "users '''+str(pr_user)+''':CL:'''+str(pr_pass)+'''" >> /usr/local/etc/3proxy/3proxy.cfg
+
+echo "socks -n -a -p3128" >> /usr/local/etc/3proxy/3proxy.cfg
+echo "flush" >> /usr/local/etc/3proxy/3proxy.cfg
+echo "allow *" >> /usr/local/etc/3proxy/3proxy.cfg
+
+line="* * * * * pgrep 3proxy || /usr/local/etc/3proxy/bin/3proxy /usr/local/etc/3proxy/3proxy.cfg"
+(crontab -l | grep -v 3proxy; echo "$line" ) | crontab -
+
+line="@reboot pgrep 3proxy || /usr/local/etc/3proxy/bin/3proxy /usr/local/etc/3proxy/3proxy.cfg"
+(crontab -l; echo "$line" ) | crontab -
+
+echo "All ok!"
+'''
+			create_file.writelines(sh_file)
+			create_file.close()
+
+		try:			
 			host_remote = re.sub("^\s+|\n|\r|\s+$", '', vps_lst[0])
 			username_serv = re.sub("^\s+|\n|\r|\s+$", '', vps_lst[1])
 			pass_serv = re.sub("^\s+|\n|\r|\s+$", '', vps_lst[2])				
@@ -127,7 +181,7 @@ b = os.system("""
 			client.close()
 
 			if os_install.find('centos')!= -1:
-				aaa = 'centos'
+				create_script_install_proxy(vps_lst[0],PROXY_USER,PROXY_PASS,random_file_pre)
 				transport = paramiko.Transport((host_remote, 22))
 				transport.connect(username=username_serv, password=pass_serv)
 				sftp = paramiko.SFTPClient.from_transport(transport) 
@@ -146,7 +200,25 @@ b = os.system("""
 				client.close()
 
 			elif os_install.find('ubuntu')!= -1 or os_install.find('debian')!= -1:
-				aaa = 'ubuntu/debian'				
+				create_script_install_debian_ubuntu(PROXY_USER,PROXY_PASS,random_file_pre)
+
+				transport = paramiko.Transport((host_remote, 22))
+				transport.connect(username=username_serv, password=pass_serv)
+				sftp = paramiko.SFTPClient.from_transport(transport) 
+
+				remotepath = '/root/install_socks_debian_ubuntu'+random_file_pre+'.sh'
+				localpath = 'media/install_socks_debian_ubuntu'+random_file_pre+'.sh'
+				sftp.put(localpath, remotepath)
+				sftp.close()
+				transport.close()
+				os.remove('media/install_socks_debian_ubuntu'+random_file_pre+'.sh')
+
+				client = paramiko.SSHClient()
+				client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+				client.connect(host_remote, username=username_serv, password=pass_serv,port=22)
+				stdin, stdout, stderr = client.exec_command('sudo -i; chmod +x install_socks_debian_ubuntu'+random_file_pre+'.sh && ./install_socks_debian_ubuntu'+random_file_pre+'.sh')
+
+				client.close()
 
 			
 			
